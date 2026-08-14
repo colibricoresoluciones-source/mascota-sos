@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mascota SOS — Reencuentra a tu mascota</title>
+<meta name="description" content="Plataforma para reportar y buscar mascotas perdidas o encontradas tras el terremoto en Colombia.">
+<script src="https://unpkg.com/lucide@0.474.0/dist/umd/lucide.min.js"></script>
+<style>
+  :root{
+    --brand:#ff7a45; --brand-dark:#e8590c; --ok:#2f9e44; --warn:#f08c00; --bg:#fef6f1;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:#2b2118}
+  a{color:inherit}
+
+  header{background:linear-gradient(135deg,var(--brand) 0%,var(--brand-dark) 100%);color:#fff;padding:20px 24px}
+  .header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+  .logo{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:800}
+  .logo svg{width:28px;height:28px}
+  .header-actions{display:flex;gap:10px}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:999px;border:none;font-weight:700;font-size:14px;cursor:pointer;transition:transform .1s}
+  .btn:hover{transform:translateY(-1px)}
+  .btn-white{background:#fff;color:var(--brand-dark)}
+  .btn-outline{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.7)}
+  .btn-primary{background:var(--brand);color:#fff}
+  .btn-primary:hover{background:var(--brand-dark)}
+  .btn-secondary{background:#f1e9e2;color:#5c4a3a}
+  .btn-sm{padding:6px 12px;font-size:12px}
+
+  .hero{max-width:1100px;margin:0 auto;padding:28px 24px 8px;text-align:center}
+  .hero h1{font-size:26px;margin:0 0 6px;color:#5c2b0a}
+  .hero p{color:#7a6350;font-size:15px;margin:0}
+
+  .filters{max-width:1100px;margin:20px auto 0;padding:0 24px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field label{font-size:12px;font-weight:700;color:#7a6350}
+  .field input,.field select{padding:10px 12px;border-radius:10px;border:1px solid #e8d9cb;font-size:14px;background:#fff}
+  .field input{min-width:180px}
+  .tabs{display:flex;gap:6px}
+  .tab{padding:9px 16px;border-radius:999px;border:1px solid #e8d9cb;background:#fff;font-weight:700;font-size:13px;cursor:pointer;color:#7a6350}
+  .tab.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+
+  .grid{max-width:1100px;margin:24px auto;padding:0 24px 60px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
+  .card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(90,50,20,.08);display:flex;flex-direction:column}
+  .card-photo{aspect-ratio:4/3;background:#f1e9e2 center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:#c9b6a3}
+  .card-photo svg{width:40px;height:40px}
+  .card-body{padding:14px 16px;flex:1;display:flex;flex-direction:column;gap:6px}
+  .card-badges{display:flex;gap:6px;flex-wrap:wrap}
+  .badge{padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.02em}
+  .badge-perdido{background:#fff0e6;color:var(--brand-dark)}
+  .badge-encontrado{background:#e6f7ea;color:var(--ok)}
+  .badge-resuelto{background:#eee;color:#888}
+  .card-title{font-size:16px;font-weight:800;margin:0}
+  .card-meta{font-size:13px;color:#8a7360;display:flex;align-items:center;gap:5px}
+  .card-desc{font-size:13px;color:#5c4a3a;line-height:1.4;margin:2px 0}
+  .card-contact{margin-top:auto;padding-top:10px;border-top:1px solid #f1e9e2;font-size:13px}
+  .card-contact strong{display:block;font-size:13px}
+  .card-footer{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px}
+
+  .empty-state{grid-column:1/-1;text-align:center;padding:60px 20px;color:#a8927e}
+  .empty-state svg{width:44px;height:44px;margin-bottom:10px;opacity:.5}
+
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(40,20,5,.5);align-items:center;justify-content:center;z-index:100;padding:16px}
+  .modal-overlay.open{display:flex}
+  .modal-box{background:#fff;border-radius:18px;padding:28px;max-width:540px;width:100%;max-height:90vh;overflow-y:auto}
+  .modal-box h2{margin:0 0 4px;font-size:20px;color:#5c2b0a}
+  .modal-box .sub{color:#8a7360;font-size:13px;margin:0 0 18px}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .form-hint{font-size:12px;color:#a8927e;margin-top:5px}
+  .modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
+  textarea{resize:vertical;font-family:inherit}
+  .type-toggle{display:flex;gap:8px;margin-bottom:16px}
+  .type-toggle button{flex:1;padding:12px;border-radius:12px;border:2px solid #e8d9cb;background:#fff;font-weight:800;font-size:14px;cursor:pointer;color:#7a6350}
+  .type-toggle button.active-perdido{border-color:var(--brand);background:#fff0e6;color:var(--brand-dark)}
+  .type-toggle button.active-encontrado{border-color:var(--ok);background:#e6f7ea;color:var(--ok)}
+  .msg{font-size:13px;margin-top:10px;text-align:center}
+  .msg.err{color:#e03131}.msg.ok{color:var(--ok)}
+  .close-x{position:absolute;top:16px;right:20px;background:none;border:none;font-size:20px;cursor:pointer;color:#a8927e}
+  .modal-box{position:relative}
+  footer{text-align:center;padding:24px;color:#a8927e;font-size:12px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo"><i data-lucide="paw-print"></i> Mascota SOS</div>
+    <div class="header-actions">
+      <button class="btn btn-outline" onclick="abrirFormulario('encontrado')"><i data-lucide="hand-heart"></i> Encontré una mascota</button>
+      <button class="btn btn-white" onclick="abrirFormulario('perdido')"><i data-lucide="search"></i> Perdí mi mascota</button>
+    </div>
+  </div>
+</header>
+
+<div class="hero">
+  <h1>Reencontremos juntos a las mascotas perdidas</h1>
+  <p>Reporta o busca mascotas perdidas y encontradas tras el terremoto. Es gratis y no necesitas crear una cuenta.</p>
+</div>
+
+<div class="filters">
+  <div class="tabs" id="tabs-tipo">
+    <button class="tab active" data-tipo="" onclick="setFiltroTipo('')">Todos</button>
+    <button class="tab" data-tipo="perdido" onclick="setFiltroTipo('perdido')">Perdidos</button>
+    <button class="tab" data-tipo="encontrado" onclick="setFiltroTipo('encontrado')">Encontrados</button>
+  </div>
+  <div class="field">
+    <label>Ciudad</label>
+    <input type="text" id="f-ciudad" list="ciudades-list" placeholder="Todas las ciudades" oninput="pintarLista()">
+    <datalist id="ciudades-list">
+      <option value="Manizales"><option value="Villamaría"><option value="Chinchiná">
+      <option value="Neira"><option value="Palestina"><option value="Pereira">
+      <option value="Armenia"><option value="Ibagué"><option value="Medellín">
+      <option value="Bogotá"><option value="Cali">
+    </datalist>
+  </div>
+  <div class="field">
+    <label>Especie</label>
+    <select id="f-especie" onchange="pintarLista()">
+      <option value="">Todas</option>
+      <option value="perro">Perro</option>
+      <option value="gato">Gato</option>
+      <option value="otro">Otro</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Buscar</label>
+    <input type="text" id="f-texto" placeholder="Nombre, color, raza..." oninput="pintarLista()">
+  </div>
+</div>
+
+<div class="grid" id="grid">
+  <div class="empty-state"><p>Cargando reportes...</p></div>
+</div>
+
+<footer>Mascota SOS — Hecho con cariño para ayudar a reunir familias con sus mascotas.</footer>
+
+<!-- ============ MODAL: REPORTAR ============ -->
+<div class="modal-overlay" id="modal-reporte">
+  <div class="modal-box">
+    <button class="close-x" onclick="closeModal('modal-reporte')">&times;</button>
+    <h2 id="rp-titulo">Reportar mascota</h2>
+    <p class="sub">Entre más detalles y una foto clara, más fácil será el reencuentro.</p>
+    <div class="type-toggle">
+      <button type="button" id="btn-tipo-perdido" onclick="cambiarTipoForm('perdido')">🐾 Perdí mi mascota</button>
+      <button type="button" id="btn-tipo-encontrado" onclick="cambiarTipoForm('encontrado')">🤲 Encontré una mascota</button>
+    </div>
+    <form id="form-reporte" onsubmit="return guardarReporte(event)">
+      <input type="hidden" id="rp-tipo" value="perdido">
+      <div class="form-row">
+        <div class="field"><label>Nombre de la mascota (si lo sabes)</label><input type="text" id="rp-nombre"></div>
+        <div class="field"><label>Especie</label>
+          <select id="rp-especie"><option value="perro">Perro</option><option value="gato">Gato</option><option value="otro">Otro</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Raza</label><input type="text" id="rp-raza"></div>
+        <div class="field"><label>Color</label><input type="text" id="rp-color"></div>
+      </div>
+      <div class="field" style="margin-top:12px"><label>Tamaño</label>
+        <select id="rp-tamano"><option value="pequeño">Pequeño</option><option value="mediano" selected>Mediano</option><option value="grande">Grande</option></select>
+      </div>
+      <div class="field" style="margin-top:12px"><label>Descripción (señas particulares, collar, comportamiento...)</label>
+        <textarea id="rp-descripcion" rows="3" style="padding:10px 12px;border-radius:10px;border:1px solid #e8d9cb;font-size:14px"></textarea>
+      </div>
+      <div class="form-row" style="margin-top:12px">
+        <div class="field"><label>Ciudad</label><input type="text" id="rp-ciudad" list="ciudades-list" required></div>
+        <div class="field"><label>Sector / barrio de referencia</label><input type="text" id="rp-sector"></div>
+      </div>
+      <div class="form-row" style="margin-top:12px">
+        <div class="field"><label id="rp-fecha-label">Fecha en que se perdió</label><input type="date" id="rp-fecha"></div>
+        <div class="field"><label>Foto</label><input type="file" id="rp-foto" accept="image/*"></div>
+      </div>
+      <hr style="margin:18px 0;border:none;border-top:1px solid #f1e9e2">
+      <div class="form-row">
+        <div class="field"><label>Tu nombre</label><input type="text" id="rp-contacto-nombre" required></div>
+        <div class="field"><label>Tu teléfono</label><input type="tel" id="rp-contacto-telefono" required></div>
+      </div>
+      <div class="field" style="margin-top:12px"><label>Correo (opcional)</label><input type="email" id="rp-contacto-email"></div>
+      <div id="rp-error" class="msg err"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-reporte')">Cancelar</button>
+        <button type="submit" class="btn btn-primary" id="rp-submit">Publicar reporte</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ MODAL: CODIGO GUARDADO ============ -->
+<div class="modal-overlay" id="modal-codigo">
+  <div class="modal-box" style="text-align:center">
+    <h2>¡Reporte publicado! 🎉</h2>
+    <p class="sub">Guarda este código — lo necesitarás para marcar tu reporte como "resuelto" cuando reencuentres a tu mascota.</p>
+    <div style="font-size:28px;font-weight:900;letter-spacing:.1em;background:#fff0e6;color:var(--brand-dark);padding:16px;border-radius:12px;margin:12px 0" id="codigo-mostrado"></div>
+    <button class="btn btn-primary" onclick="closeModal('modal-codigo')" style="width:100%">Entendido</button>
+  </div>
+</div>
+
+<!-- ============ MODAL: DETALLE ============ -->
+<div class="modal-overlay" id="modal-detalle">
+  <div class="modal-box">
+    <button class="close-x" onclick="closeModal('modal-detalle')">&times;</button>
+    <div id="detalle-contenido"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+let REPORTES = [];
+let filtroTipo = '';
+
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function esc(s){ if(s===null||s===undefined) return ''; return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function setFiltroTipo(t){
+  filtroTipo = t;
+  document.querySelectorAll('#tabs-tipo .tab').forEach(b=>b.classList.toggle('active', b.dataset.tipo===t));
+  pintarLista();
+}
+
+async function cargarReportes(){
+  const {data, error} = await sb.from('reportes_publico').select('*').order('created_at',{ascending:false});
+  if(error){ console.error(error); return; }
+  REPORTES = data || [];
+  pintarLista();
+}
+
+function pintarLista(){
+  const ciudad = document.getElementById('f-ciudad').value.trim().toLowerCase();
+  const especie = document.getElementById('f-especie').value;
+  const texto = document.getElementById('f-texto').value.trim().toLowerCase();
+  const filtrados = REPORTES.filter(r=>{
+    if(filtroTipo && r.tipo!==filtroTipo) return false;
+    if(ciudad && !(r.ciudad||'').toLowerCase().includes(ciudad)) return false;
+    if(especie && r.especie!==especie) return false;
+    if(texto){
+      const campo = [r.nombre_mascota,r.raza,r.color,r.descripcion,r.sector].join(' ').toLowerCase();
+      if(!campo.includes(texto)) return false;
+    }
+    return true;
+  });
+  const grid = document.getElementById('grid');
+  if(!filtrados.length){
+    grid.innerHTML = `<div class="empty-state"><i data-lucide="search-x"></i><p>No hay reportes que coincidan con tu búsqueda.</p></div>`;
+    if(window.lucide) lucide.createIcons();
+    return;
+  }
+  grid.innerHTML = filtrados.map(r=>`
+    <div class="card">
+      <div class="card-photo" ${r.foto_url?`style="background-image:url('${esc(r.foto_url)}')"`:''}>
+        ${r.foto_url?'':'<i data-lucide="paw-print"></i>'}
+      </div>
+      <div class="card-body">
+        <div class="card-badges">
+          <span class="badge badge-${r.tipo}">${r.tipo==='perdido'?'Perdido':'Encontrado'}</span>
+          ${r.estado==='resuelto'?'<span class="badge badge-resuelto">Resuelto</span>':''}
+        </div>
+        <h3 class="card-title">${esc(r.nombre_mascota) || (r.especie==='perro'?'Perro':r.especie==='gato'?'Gato':'Mascota')}</h3>
+        <div class="card-meta"><i data-lucide="map-pin" style="width:14px;height:14px"></i> ${esc(r.ciudad)}${r.sector?', '+esc(r.sector):''}</div>
+        ${r.raza||r.color?`<div class="card-meta">${esc(r.raza||'')}${r.raza&&r.color?' · ':''}${esc(r.color||'')}</div>`:''}
+        <p class="card-desc">${esc((r.descripcion||'').slice(0,90))}${(r.descripcion||'').length>90?'...':''}</p>
+        <div class="card-footer">
+          <button class="btn btn-secondary btn-sm" onclick="verDetalle('${r.id}')">Ver más</button>
+          <a class="btn btn-primary btn-sm" href="tel:${esc(r.contacto_telefono)}"><i data-lucide="phone" style="width:14px;height:14px"></i> Contactar</a>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  if(window.lucide) lucide.createIcons();
+}
+
+function verDetalle(id){
+  const r = REPORTES.find(x=>x.id===id); if(!r) return;
+  document.getElementById('detalle-contenido').innerHTML = `
+    ${r.foto_url?`<img src="${esc(r.foto_url)}" style="width:100%;border-radius:12px;margin-bottom:14px;max-height:320px;object-fit:cover">`:''}
+    <div class="card-badges" style="margin-bottom:8px">
+      <span class="badge badge-${r.tipo}">${r.tipo==='perdido'?'Perdido':'Encontrado'}</span>
+      ${r.estado==='resuelto'?'<span class="badge badge-resuelto">Resuelto</span>':''}
+    </div>
+    <h2 style="margin:0 0 4px">${esc(r.nombre_mascota) || (r.especie==='perro'?'Perro':r.especie==='gato'?'Gato':'Mascota')}</h2>
+    <p class="card-meta" style="margin-bottom:12px"><i data-lucide="map-pin" style="width:14px;height:14px"></i> ${esc(r.ciudad)}${r.sector?', '+esc(r.sector):''} ${r.fecha_evento?' · '+new Date(r.fecha_evento+'T00:00:00').toLocaleDateString('es'):''}</p>
+    <p style="font-size:14px;color:#5c4a3a;line-height:1.5">${esc(r.descripcion||'Sin descripción adicional.')}</p>
+    <p style="font-size:13px;color:#8a7360;margin-top:10px">${esc(r.raza||'')}${r.raza&&r.color?' · ':''}${esc(r.color||'')}${(r.raza||r.color)&&r.tamano?' · ':''}${esc(r.tamano||'')}</p>
+    <div class="card-contact" style="margin-top:16px">
+      <strong>Contacto: ${esc(r.contacto_nombre)}</strong>
+      <a class="btn btn-primary btn-sm" style="margin-top:8px" href="tel:${esc(r.contacto_telefono)}"><i data-lucide="phone" style="width:14px;height:14px"></i> ${esc(r.contacto_telefono)}</a>
+      ${r.contacto_email?`<div style="margin-top:6px;font-size:13px">${esc(r.contacto_email)}</div>`:''}
+    </div>
+    ${r.estado!=='resuelto'?`<p style="margin-top:16px"><a href="#" onclick="pedirCodigoResuelto('${r.id}');return false" style="font-size:12px;color:#a8927e">¿Es tu reporte? Marcar como resuelto →</a></p>`:''}
+  `;
+  openModal('modal-detalle');
+  if(window.lucide) lucide.createIcons();
+}
+
+async function pedirCodigoResuelto(id){
+  const codigo = prompt('Escribe el código que te dimos al crear este reporte:');
+  if(!codigo) return;
+  const {data, error} = await sb.rpc('marcar_resuelto', {p_id: id, p_codigo: codigo.trim()});
+  if(error || !data){ alert('El código no es correcto, o el reporte ya no existe.'); return; }
+  alert('¡Reporte marcado como resuelto! Gracias por avisar.');
+  closeModal('modal-detalle');
+  cargarReportes();
+}
+
+// ---------- FORMULARIO DE REPORTE ----------
+function abrirFormulario(tipo){
+  document.getElementById('form-reporte').reset();
+  document.getElementById('rp-error').textContent = '';
+  cambiarTipoForm(tipo);
+  openModal('modal-reporte');
+}
+
+function cambiarTipoForm(tipo){
+  document.getElementById('rp-tipo').value = tipo;
+  document.getElementById('rp-titulo').textContent = tipo==='perdido' ? 'Perdí mi mascota' : 'Encontré una mascota';
+  document.getElementById('rp-fecha-label').textContent = tipo==='perdido' ? 'Fecha en que se perdió' : 'Fecha en que la encontraste';
+  document.getElementById('btn-tipo-perdido').classList.toggle('active-perdido', tipo==='perdido');
+  document.getElementById('btn-tipo-encontrado').classList.toggle('active-encontrado', tipo==='encontrado');
+}
+
+async function guardarReporte(ev){
+  ev.preventDefault();
+  const err = document.getElementById('rp-error');
+  const btn = document.getElementById('rp-submit');
+  err.textContent = '';
+  btn.disabled = true; btn.textContent = 'Publicando...';
+
+  try{
+    let foto_url = null;
+    const fotoInput = document.getElementById('rp-foto');
+    if(fotoInput.files && fotoInput.files[0]){
+      const file = fotoInput.files[0];
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2,8)}-${file.name}`;
+      const {error: upErr} = await sb.storage.from('fotos').upload(path, file);
+      if(upErr){ throw new Error('Error subiendo la foto: '+upErr.message); }
+      const {data:pub} = sb.storage.from('fotos').getPublicUrl(path);
+      foto_url = pub.publicUrl;
+    }
+
+    const {data, error} = await sb.rpc('crear_reporte', {
+      p_tipo: document.getElementById('rp-tipo').value,
+      p_especie: document.getElementById('rp-especie').value,
+      p_nombre_mascota: document.getElementById('rp-nombre').value || null,
+      p_raza: document.getElementById('rp-raza').value || null,
+      p_color: document.getElementById('rp-color').value || null,
+      p_tamano: document.getElementById('rp-tamano').value,
+      p_descripcion: document.getElementById('rp-descripcion').value || null,
+      p_ciudad: document.getElementById('rp-ciudad').value,
+      p_sector: document.getElementById('rp-sector').value || null,
+      p_fecha_evento: document.getElementById('rp-fecha').value || null,
+      p_foto_url: foto_url,
+      p_contacto_nombre: document.getElementById('rp-contacto-nombre').value,
+      p_contacto_telefono: document.getElementById('rp-contacto-telefono').value,
+      p_contacto_email: document.getElementById('rp-contacto-email').value || null
+    });
+    if(error) throw new Error(error.message);
+    const fila = Array.isArray(data) ? data[0] : data;
+
+    closeModal('modal-reporte');
+    document.getElementById('codigo-mostrado').textContent = fila.codigo_edicion;
+    openModal('modal-codigo');
+    cargarReportes();
+  } catch(e){
+    err.textContent = e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Publicar reporte';
+  }
+  return false;
+}
+
+cargarReportes();
+if(window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>
