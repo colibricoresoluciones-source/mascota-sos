@@ -1,8 +1,12 @@
-// Service worker minimo: solo cachea los archivos estaticos para que la
-// app abra rapido y funcione como "app instalada". Los datos (reportes)
+// Service worker minimo: cachea los archivos estaticos para que la app
+// abra rapido y funcione como "app instalada". Los datos (reportes)
 // siempre se piden en vivo a Supabase, no se guardan offline.
-const CACHE = 'mascota-sos-v1';
-const ARCHIVOS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+//
+// IMPORTANTE: la pagina principal (HTML) usa estrategia "red primero,
+// cache de respaldo" -- asi cada vez que publicamos un cambio, se ve de
+// inmediato en vez de quedar atascado con una version vieja guardada.
+const CACHE = 'mascota-sos-v2';
+const ARCHIVOS = ['./manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (ev) => {
   ev.waitUntil(caches.open(CACHE).then(c => c.addAll(ARCHIVOS)));
@@ -17,8 +21,20 @@ self.addEventListener('activate', (ev) => {
 });
 
 self.addEventListener('fetch', (ev) => {
-  // Peticiones a Supabase (datos) siempre van a la red, nunca a cache.
-  if (ev.request.url.includes('supabase.co')) return;
+  if (ev.request.url.includes('supabase.co')) return; // datos: siempre red
+  const esNavegacion = ev.request.mode === 'navigate' || ev.request.destination === 'document';
+  if (esNavegacion) {
+    // HTML: intenta la red primero (para ver cambios nuevos de inmediato);
+    // si no hay internet, usa la copia guardada como respaldo.
+    ev.respondWith(
+      fetch(ev.request).then(res => {
+        caches.open(CACHE).then(c => c.put(ev.request, res.clone()));
+        return res;
+      }).catch(() => caches.match(ev.request))
+    );
+    return;
+  }
+  // Archivos estaticos (iconos, manifest): cache primero, mas rapido.
   ev.respondWith(
     caches.match(ev.request).then(cached => cached || fetch(ev.request))
   );
