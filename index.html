@@ -51,8 +51,6 @@
   .hero p{color:#7a6350;font-size:15px;margin:0}
   .hero-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:20px}
   .hero-actions .btn{padding:13px 22px;font-size:15px}
-  .btn-donar{background:#2f9e44;color:#fff}
-  .btn-donar:hover{background:#268a3a}
 
   .filters{max-width:1100px;margin:20px auto 0;padding:0 24px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
   .field{display:flex;flex-direction:column;gap:4px}
@@ -117,7 +115,6 @@
   <div class="hero-actions">
     <button class="btn btn-primary" onclick="abrirFormulario('perdido')"><i data-lucide="search"></i> Perdí mi mascota</button>
     <button class="btn btn-secondary" onclick="abrirFormulario('encontrado')"><i data-lucide="hand-heart"></i> Encontré una mascota</button>
-    <button class="btn btn-donar" onclick="openModal('modal-donar')"><i data-lucide="heart-handshake"></i> Donar</button>
   </div>
   <div id="stats-reencuentro" style="display:none;margin-top:18px;font-size:14px;font-weight:700;color:var(--ok)"></div>
 </div>
@@ -179,7 +176,7 @@
   <div class="empty-state"><p>Cargando reportes...</p></div>
 </div>
 
-<footer>Mascota SOS — Hecho con cariño para ayudar a reunir familias con sus mascotas.<br>Plataforma 100% gratuita. Las donaciones son voluntarias.</footer>
+<footer>Mascota SOS — Hecho con cariño para ayudar a reunir familias con sus mascotas.<br>Plataforma 100% gratuita.</footer>
 
 <!-- ============ MODAL: REPORTAR ============ -->
 <div class="modal-overlay" id="modal-reporte">
@@ -256,21 +253,6 @@
   <div class="modal-box">
     <button class="close-x" onclick="closeModal('modal-detalle')">&times;</button>
     <div id="detalle-contenido"></div>
-  </div>
-</div>
-
-<!-- ============ MODAL: DONAR ============ -->
-<div class="modal-overlay" id="modal-donar">
-  <div class="modal-box" style="text-align:center">
-    <button class="close-x" onclick="closeModal('modal-donar')">&times;</button>
-    <h2>Ayuda a los animales damnificados 🐾</h2>
-    <p class="sub">Usar Mascota SOS es <strong>totalmente gratis</strong> — reportar, buscar y contactar no cuesta nada. Si quieres saber cómo puedes apoyar a los animales afectados por el terremoto (donaciones voluntarias, alimento, atención veterinaria, refugio temporal), escríbeme directamente.</p>
-    <div style="background:#fff0e6;border-radius:14px;padding:20px;margin:16px 0">
-      <div style="font-size:12px;font-weight:700;color:#a8927e;text-transform:uppercase;letter-spacing:.05em">Contacto</div>
-      <div style="font-size:28px;font-weight:900;color:var(--brand-dark);margin:6px 0;letter-spacing:.03em" id="donar-numero">304 315 5228</div>
-      <a class="btn btn-primary btn-sm" href="https://wa.me/573043155228" target="_blank"><i data-lucide="message-circle" style="width:14px;height:14px"></i> Escribir por WhatsApp</a>
-    </div>
-    <button class="btn btn-secondary" onclick="closeModal('modal-donar')" style="width:100%;margin-top:10px">Cerrar</button>
   </div>
 </div>
 
