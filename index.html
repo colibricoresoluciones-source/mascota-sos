@@ -206,6 +206,10 @@
         <div class="field"><label>Tu teléfono</label><input type="tel" id="rp-contacto-telefono" required></div>
       </div>
       <div class="field" style="margin-top:12px"><label>Correo (opcional)</label><input type="email" id="rp-contacto-email"></div>
+      <div style="display:flex;gap:8px;align-items:flex-start;margin-top:16px">
+        <input type="checkbox" id="rp-consentimiento" required style="margin-top:3px">
+        <label for="rp-consentimiento" style="font-weight:400;font-size:12px;color:#7a6350">Entiendo que mi nombre y teléfono se mostrarán públicamente en esta página para que puedan contactarme, conforme a la Ley 1581 de 2012 de protección de datos personales.</label>
+      </div>
       <div id="rp-error" class="msg err"></div>
       <div class="modal-actions">
         <button type="button" class="btn btn-secondary" onclick="closeModal('modal-reporte')">Cancelar</button>
