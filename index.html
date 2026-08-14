@@ -41,6 +41,10 @@
   .hero{max-width:1100px;margin:0 auto;padding:28px 24px 8px;text-align:center}
   .hero h1{font-size:26px;margin:0 0 6px;color:#5c2b0a}
   .hero p{color:#7a6350;font-size:15px;margin:0}
+  .hero-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:20px}
+  .hero-actions .btn{padding:13px 22px;font-size:15px}
+  .btn-donar{background:#2f9e44;color:#fff}
+  .btn-donar:hover{background:#268a3a}
 
   .filters{max-width:1100px;margin:20px auto 0;padding:0 24px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
   .field{display:flex;flex-direction:column;gap:4px}
@@ -96,17 +100,17 @@
 <header>
   <div class="header-inner">
     <div class="logo"><i data-lucide="paw-print"></i> Mascota SOS</div>
-    <div class="header-actions">
-      <button class="btn btn-outline" onclick="openModal('modal-donar')"><i data-lucide="heart-handshake"></i> Donar</button>
-      <button class="btn btn-outline" onclick="abrirFormulario('encontrado')"><i data-lucide="hand-heart"></i> Encontré una mascota</button>
-      <button class="btn btn-white" onclick="abrirFormulario('perdido')"><i data-lucide="search"></i> Perdí mi mascota</button>
-    </div>
   </div>
 </header>
 
 <div class="hero">
   <h1>Reencontremos juntos a las mascotas perdidas</h1>
   <p>Reporta o busca mascotas perdidas y encontradas tras el terremoto. Es gratis y no necesitas crear una cuenta.</p>
+  <div class="hero-actions">
+    <button class="btn btn-primary" onclick="abrirFormulario('perdido')"><i data-lucide="search"></i> Perdí mi mascota</button>
+    <button class="btn btn-secondary" onclick="abrirFormulario('encontrado')"><i data-lucide="hand-heart"></i> Encontré una mascota</button>
+    <button class="btn btn-donar" onclick="openModal('modal-donar')"><i data-lucide="heart-handshake"></i> Donar</button>
+  </div>
 </div>
 
 <div class="filters">
