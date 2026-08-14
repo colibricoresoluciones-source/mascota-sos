@@ -264,13 +264,12 @@
   <div class="modal-box" style="text-align:center">
     <button class="close-x" onclick="closeModal('modal-donar')">&times;</button>
     <h2>Ayuda a los animales damnificados 🐾</h2>
-    <p class="sub">Usar Mascota SOS es <strong>totalmente gratis</strong> — reportar, buscar y contactar no cuesta nada. Este aporte es <strong>completamente voluntario</strong> y se destina a apoyar a los animales afectados por el terremoto (alimento, atención veterinaria, refugio temporal). Cualquier aporte ayuda, pero nunca es obligatorio.</p>
+    <p class="sub">Usar Mascota SOS es <strong>totalmente gratis</strong> — reportar, buscar y contactar no cuesta nada. Si quieres saber cómo puedes apoyar a los animales afectados por el terremoto (donaciones voluntarias, alimento, atención veterinaria, refugio temporal), escríbeme directamente.</p>
     <div style="background:#fff0e6;border-radius:14px;padding:20px;margin:16px 0">
-      <div style="font-size:12px;font-weight:700;color:#a8927e;text-transform:uppercase;letter-spacing:.05em">Nequi / Daviplata</div>
-      <div style="font-size:28px;font-weight:900;color:var(--brand-dark);margin:6px 0;letter-spacing:.03em" id="donar-numero">310 784 7274</div>
-      <button class="btn btn-primary btn-sm" onclick="copiarNumeroDonar()" id="donar-copiar-btn"><i data-lucide="copy" style="width:14px;height:14px"></i> Copiar número</button>
+      <div style="font-size:12px;font-weight:700;color:#a8927e;text-transform:uppercase;letter-spacing:.05em">Contacto</div>
+      <div style="font-size:28px;font-weight:900;color:var(--brand-dark);margin:6px 0;letter-spacing:.03em" id="donar-numero">304 315 5228</div>
+      <a class="btn btn-primary btn-sm" href="https://wa.me/573043155228" target="_blank"><i data-lucide="message-circle" style="width:14px;height:14px"></i> Escribir por WhatsApp</a>
     </div>
-    <p class="form-hint">Abre tu app de Nequi o Daviplata → Enviar dinero → pega este número.</p>
     <button class="btn btn-secondary" onclick="closeModal('modal-donar')" style="width:100%;margin-top:10px">Cerrar</button>
   </div>
 </div>
@@ -415,16 +414,6 @@ function compartirWhatsApp(id){
   const url = location.origin + location.pathname + '?ver=' + r.id;
   const texto = `🐾 ${accion} ${nombre} en ${r.ciudad}${r.sector?', '+r.sector:''}. Ayúdanos a compartir para reencontrar a su familia:\n${url}`;
   window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank');
-}
-
-function copiarNumeroDonar(){
-  const numero = '3107847274';
-  navigator.clipboard.writeText(numero).then(()=>{
-    const btn = document.getElementById('donar-copiar-btn');
-    const original = btn.innerHTML;
-    btn.innerHTML = '✓ Copiado';
-    setTimeout(()=>{ btn.innerHTML = original; if(window.lucide) lucide.createIcons(); }, 1800);
-  });
 }
 
 // ---------- FORMULARIO DE REPORTE ----------
