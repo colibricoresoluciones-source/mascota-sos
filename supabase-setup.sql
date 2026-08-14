@@ -104,6 +104,24 @@ $$;
 
 grant execute on function public.marcar_resuelto(uuid, text) to anon, authenticated;
 
+-- ========== 6b. FUNCION: eliminar el propio reporte (requiere el codigo) ==========
+create or replace function public.eliminar_reporte(p_id uuid, p_codigo text)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  filas int;
+begin
+  delete from public.reportes where id = p_id and codigo_edicion = p_codigo;
+  get diagnostics filas = row_count;
+  return filas > 0;
+end;
+$$;
+
+grant execute on function public.eliminar_reporte(uuid, text) to anon, authenticated;
+
 -- ========== 7. STORAGE (fotos) ==========
 insert into storage.buckets (id, name, public)
 values ('fotos', 'fotos', true)

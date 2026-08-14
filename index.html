@@ -6,6 +6,14 @@
 <title>Mascota SOS — Reencuentra a tu mascota</title>
 <meta name="description" content="Plataforma para reportar y buscar mascotas perdidas o encontradas tras el terremoto en Colombia.">
 
+<!-- Open Graph: vista previa bonita al compartir por WhatsApp/Facebook -->
+<meta property="og:title" content="Mascota SOS — Reencuentra a tu mascota">
+<meta property="og:description" content="Reporta o busca mascotas perdidas y encontradas tras el terremoto en Colombia. Gratis, sin necesidad de crear cuenta.">
+<meta property="og:image" content="https://monumental-maamoul-039a90.netlify.app/og-banner.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://monumental-maamoul-039a90.netlify.app/">
+<meta name="twitter:card" content="summary_large_image">
+
 <!-- PWA: permite "Agregar a pantalla de inicio" en el celular -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ff7a45">
@@ -111,6 +119,7 @@
     <button class="btn btn-secondary" onclick="abrirFormulario('encontrado')"><i data-lucide="hand-heart"></i> Encontré una mascota</button>
     <button class="btn btn-donar" onclick="openModal('modal-donar')"><i data-lucide="heart-handshake"></i> Donar</button>
   </div>
+  <div id="stats-reencuentro" style="display:none;margin-top:18px;font-size:14px;font-weight:700;color:var(--ok)"></div>
 </div>
 
 <div class="filters">
@@ -162,6 +171,11 @@
     </div>
     <form id="form-reporte" onsubmit="return guardarReporte(event)">
       <input type="hidden" id="rp-tipo" value="perdido">
+      <!-- Campo trampa anti-spam: invisible para personas, los bots suelen llenarlo -->
+      <div style="position:absolute;left:-9999px" aria-hidden="true">
+        <label>No llenar este campo</label>
+        <input type="text" id="rp-honeypot" name="website" tabindex="-1" autocomplete="off">
+      </div>
       <div class="form-row">
         <div class="field"><label>Nombre de la mascota (si lo sabes)</label><input type="text" id="rp-nombre"></div>
         <div class="field"><label>Especie</label>
@@ -262,7 +276,19 @@ async function cargarReportes(){
   if(verId && REPORTES.some(r=>r.id===verId)) verDetalle(verId);
 }
 
+function pintarStats(){
+  const resueltos = REPORTES.filter(r=>r.estado==='resuelto').length;
+  const el = document.getElementById('stats-reencuentro');
+  if(resueltos > 0){
+    el.textContent = `🎉 ${resueltos} mascota${resueltos===1?'':'s'} ya se ${resueltos===1?'reencontró':'reencontraron'} con su familia gracias a esta plataforma`;
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
 function pintarLista(){
+  pintarStats();
   const ciudad = document.getElementById('f-ciudad').value.trim().toLowerCase();
   const especie = document.getElementById('f-especie').value;
   const texto = document.getElementById('f-texto').value.trim().toLowerCase();
@@ -325,7 +351,10 @@ function verDetalle(id){
       <button class="btn btn-secondary btn-sm" style="margin-top:8px;margin-left:6px" onclick="compartirWhatsApp('${r.id}')"><i data-lucide="share-2" style="width:14px;height:14px"></i> Compartir</button>
       ${r.contacto_email?`<div style="margin-top:6px;font-size:13px">${esc(r.contacto_email)}</div>`:''}
     </div>
-    ${r.estado!=='resuelto'?`<p style="margin-top:16px"><a href="#" onclick="pedirCodigoResuelto('${r.id}');return false" style="font-size:12px;color:#a8927e">¿Es tu reporte? Marcar como resuelto →</a></p>`:''}
+    <p style="margin-top:16px;display:flex;gap:14px;flex-wrap:wrap">
+      ${r.estado!=='resuelto'?`<a href="#" onclick="pedirCodigoResuelto('${r.id}');return false" style="font-size:12px;color:#a8927e">¿Es tu reporte? Marcar como resuelto →</a>`:''}
+      <a href="#" onclick="pedirCodigoEliminar('${r.id}');return false" style="font-size:12px;color:#c2483a">Eliminar mi reporte</a>
+    </p>
   `;
   openModal('modal-detalle');
   if(window.lucide) lucide.createIcons();
@@ -338,6 +367,17 @@ async function pedirCodigoResuelto(id){
   const {data, error} = await sb.rpc('marcar_resuelto', {p_id: id, p_codigo: codigo.trim()});
   if(error || !data){ alert('El código no es correcto, o el reporte ya no existe.'); return; }
   alert('¡Reporte marcado como resuelto! Gracias por avisar.');
+  closeModal('modal-detalle');
+  cargarReportes();
+}
+
+async function pedirCodigoEliminar(id){
+  const codigo = prompt('Escribe el código que te dimos al crear este reporte, para confirmar que es tuyo:');
+  if(!codigo) return;
+  if(!confirm('¿Seguro que quieres eliminar este reporte? No se puede deshacer.')) return;
+  const {data, error} = await sb.rpc('eliminar_reporte', {p_id: id, p_codigo: codigo.trim()});
+  if(error || !data){ alert('El código no es correcto, o el reporte ya no existe.'); return; }
+  alert('Reporte eliminado.');
   closeModal('modal-detalle');
   cargarReportes();
 }
@@ -362,10 +402,12 @@ function copiarNumeroDonar(){
 }
 
 // ---------- FORMULARIO DE REPORTE ----------
+let formAbiertoEn = 0;
 function abrirFormulario(tipo){
   document.getElementById('form-reporte').reset();
   document.getElementById('rp-error').textContent = '';
   cambiarTipoForm(tipo);
+  formAbiertoEn = Date.now();
   openModal('modal-reporte');
 }
 
@@ -382,6 +424,26 @@ async function guardarReporte(ev){
   const err = document.getElementById('rp-error');
   const btn = document.getElementById('rp-submit');
   err.textContent = '';
+
+  // --- Anti-spam (sin backend, pero filtra la mayoria de bots automaticos) ---
+  // 1) Campo trampa: si un bot lo lleno, se rechaza en silencio.
+  if(document.getElementById('rp-honeypot').value){
+    err.textContent = ''; // no delatamos al bot con un mensaje especifico
+    return false;
+  }
+  // 2) Un humano tarda al menos unos segundos en llenar el formulario.
+  if(Date.now() - formAbiertoEn < 3000){
+    err.textContent = 'Parece que enviaste el formulario muy rapido. Revisa los datos e intenta de nuevo.';
+    return false;
+  }
+  // 3) Limite entre reportes desde el mismo navegador (evita envios repetidos).
+  const ultimoEnvio = parseInt(localStorage.getItem('mascotaSOS_ultimoEnvio') || '0', 10);
+  const segundosDesdeUltimo = (Date.now() - ultimoEnvio) / 1000;
+  if(segundosDesdeUltimo < 30){
+    err.textContent = `Espera ${Math.ceil(30 - segundosDesdeUltimo)} segundos antes de publicar otro reporte.`;
+    return false;
+  }
+
   btn.disabled = true; btn.textContent = 'Publicando...';
 
   try{
@@ -418,6 +480,7 @@ async function guardarReporte(ev){
     if(error) throw new Error(error.message);
     const fila = Array.isArray(data) ? data[0] : data;
 
+    localStorage.setItem('mascotaSOS_ultimoEnvio', String(Date.now()));
     closeModal('modal-reporte');
     document.getElementById('codigo-mostrado').textContent = fila.codigo_edicion;
     openModal('modal-codigo');
