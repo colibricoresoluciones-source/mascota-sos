@@ -5,6 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mascota SOS — Reencuentra a tu mascota</title>
 <meta name="description" content="Plataforma para reportar y buscar mascotas perdidas o encontradas tras el terremoto en Colombia.">
+
+<!-- PWA: permite "Agregar a pantalla de inicio" en el celular -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ff7a45">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mascota SOS">
+
 <script src="https://unpkg.com/lucide@0.474.0/dist/umd/lucide.min.js"></script>
 <style>
   :root{
@@ -373,6 +383,11 @@ async function guardarReporte(ev){
 
 cargarReportes();
 if(window.lucide) lucide.createIcons();
+
+// Registra el service worker para que la app se pueda instalar en el celular.
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
 </script>
 </body>
 </html>
