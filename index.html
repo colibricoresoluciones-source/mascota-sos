@@ -51,6 +51,11 @@
   .hero p{color:#7a6350;font-size:15px;margin:0}
   .hero-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:20px}
   .hero-actions .btn{padding:13px 22px;font-size:15px}
+  .colaboracion{margin-top:28px;display:flex;flex-direction:column;align-items:center;gap:10px}
+  .colaboracion>span{font-size:12px;font-weight:700;color:#a8927e;text-transform:uppercase;letter-spacing:.05em}
+  .colaboracion-logos{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+  .colaboracion-logo{background:#fff;border-radius:12px;padding:10px 16px;box-shadow:0 2px 10px rgba(90,50,20,.08);display:flex;align-items:center}
+  .colaboracion-logo img{height:32px;width:auto;display:block}
 
   .filters{max-width:1100px;margin:20px auto 0;padding:0 24px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
   .field{display:flex;flex-direction:column;gap:4px}
@@ -117,6 +122,13 @@
     <button class="btn btn-secondary" onclick="abrirFormulario('encontrado')"><i data-lucide="hand-heart"></i> Encontré una mascota</button>
   </div>
   <div id="stats-reencuentro" style="display:none;margin-top:18px;font-size:14px;font-weight:700;color:var(--ok)"></div>
+  <div class="colaboracion">
+    <span>Con la colaboración de</span>
+    <div class="colaboracion-logos">
+      <div class="colaboracion-logo"><img src="logo-colibricore.jpeg" alt="Colibri Core"></div>
+      <div class="colaboracion-logo"><img src="logo-gaga.png" alt="GAGA Digital"></div>
+    </div>
+  </div>
 </div>
 
 <div class="filters">
