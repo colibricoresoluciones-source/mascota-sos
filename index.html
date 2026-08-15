@@ -334,6 +334,7 @@ function pintarLista(){
           <button class="btn btn-secondary btn-sm" onclick="compartirWhatsApp('${r.id}')" title="Compartir por WhatsApp"><i data-lucide="share-2" style="width:14px;height:14px"></i></button>
           <a class="btn btn-primary btn-sm" href="tel:${esc(r.contacto_telefono)}"><i data-lucide="phone" style="width:14px;height:14px"></i> Contactar</a>
         </div>
+        ${r.estado!=='resuelto'?`<button class="btn btn-sm" style="width:100%;margin-top:8px;background:var(--ok);color:#fff" onclick="marcarEncontradoPublico('${r.id}')"><i data-lucide="check-circle" style="width:14px;height:14px"></i> Marcar como encontrado</button>`:''}
       </div>
     </div>
   `).join('');
