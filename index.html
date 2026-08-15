@@ -358,24 +358,73 @@ function verDetalle(id){
       <button class="btn btn-secondary btn-sm" style="margin-top:8px;margin-left:6px" onclick="compartirWhatsApp('${r.id}')"><i data-lucide="share-2" style="width:14px;height:14px"></i> Compartir</button>
       ${r.contacto_email?`<div style="margin-top:6px;font-size:13px">${esc(r.contacto_email)}</div>`:''}
     </div>
-    <p style="margin-top:16px;display:flex;gap:14px;flex-wrap:wrap">
-      ${r.estado!=='resuelto'?`<a href="#" onclick="pedirCodigoResuelto('${r.id}');return false" style="font-size:12px;color:#a8927e">¿Es tu reporte? Marcar como resuelto →</a>`:''}
+    ${r.estado!=='resuelto'?`<button class="btn btn-primary" style="width:100%;margin-top:16px;background:var(--ok)" onclick="marcarEncontradoPublico('${r.id}')"><i data-lucide="check-circle" style="width:16px;height:16px"></i> Marcar como encontrado / reencontrado</button>`:''}
+    <p style="margin-top:12px;text-align:right">
       <a href="#" onclick="pedirCodigoEliminar('${r.id}');return false" style="font-size:12px;color:#c2483a">Eliminar mi reporte</a>
     </p>
+
+    <hr style="margin:20px 0;border:none;border-top:1px solid #f1e9e2">
+    <h3 style="font-size:15px;margin:0 0 10px">Comentarios</h3>
+    <div id="comentarios-lista"><p class="form-hint">Cargando comentarios...</p></div>
+    <form onsubmit="return agregarComentario(event,'${r.id}')" style="margin-top:14px">
+      <div style="position:absolute;left:-9999px" aria-hidden="true">
+        <input type="text" id="co-honeypot" tabindex="-1" autocomplete="off">
+      </div>
+      <div class="form-row">
+        <input type="text" id="co-nombre" placeholder="Tu nombre" maxlength="80" required style="padding:9px 12px;border-radius:8px;border:1px solid #e8d9cb;font-size:13px">
+        <div></div>
+      </div>
+      <textarea id="co-texto" placeholder="Escribe un comentario (ej: la vi cerca del parque hace una hora)..." maxlength="500" rows="2" required style="width:100%;margin-top:8px;padding:9px 12px;border-radius:8px;border:1px solid #e8d9cb;font-size:13px;font-family:inherit"></textarea>
+      <button type="submit" class="btn btn-secondary btn-sm" style="margin-top:8px">Comentar</button>
+    </form>
   `;
   openModal('modal-detalle');
   if(window.lucide) lucide.createIcons();
   history.replaceState(null, '', location.pathname+'?ver='+id);
+  cargarComentarios(id);
 }
 
-async function pedirCodigoResuelto(id){
-  const codigo = prompt('Escribe el código que te dimos al crear este reporte:');
-  if(!codigo) return;
-  const {data, error} = await sb.rpc('marcar_resuelto', {p_id: id, p_codigo: codigo.trim()});
-  if(error || !data){ alert('El código no es correcto, o el reporte ya no existe.'); return; }
-  alert('¡Reporte marcado como resuelto! Gracias por avisar.');
+async function marcarEncontradoPublico(id){
+  if(!confirm('¿Confirmas que esta mascota ya fue encontrada / reencontrada con su familia?')) return;
+  const {data, error} = await sb.rpc('marcar_encontrado_publico', {p_id: id});
+  if(error || !data){ alert('No se pudo actualizar. Intenta de nuevo.'); return; }
+  alert('¡Gracias por avisar! Marcado como encontrado.');
   closeModal('modal-detalle');
   cargarReportes();
+}
+
+async function cargarComentarios(reporteId){
+  const cont = document.getElementById('comentarios-lista');
+  const {data, error} = await sb.from('comentarios').select('*').eq('reporte_id', reporteId).order('created_at', {ascending:true});
+  if(!cont) return; // el usuario ya cerro el modal
+  if(error){ cont.innerHTML = '<p class="form-hint">No se pudieron cargar los comentarios.</p>'; return; }
+  if(!data || !data.length){ cont.innerHTML = '<p class="form-hint">Aún no hay comentarios. Sé el primero en ayudar.</p>'; return; }
+  cont.innerHTML = data.map(c=>`
+    <div style="padding:8px 0;border-bottom:1px solid #f1e9e2">
+      <strong style="font-size:13px">${esc(c.autor_nombre)}</strong>
+      <span style="font-size:11px;color:#a8927e;margin-left:6px">${new Date(c.created_at).toLocaleString('es')}</span>
+      <p style="font-size:13px;margin:4px 0 0;color:#5c4a3a">${esc(c.texto)}</p>
+    </div>
+  `).join('');
+}
+
+let comentarioEnviadoEn = 0;
+async function agregarComentario(ev, reporteId){
+  ev.preventDefault();
+  if(document.getElementById('co-honeypot').value) return false; // bot: se ignora en silencio
+  if(Date.now() - comentarioEnviadoEn < 5000){
+    alert('Espera unos segundos antes de comentar de nuevo.');
+    return false;
+  }
+  const nombre = document.getElementById('co-nombre').value.trim();
+  const texto = document.getElementById('co-texto').value.trim();
+  if(!nombre || !texto) return false;
+  const {error} = await sb.from('comentarios').insert({reporte_id: reporteId, autor_nombre: nombre, texto});
+  if(error){ alert('No se pudo publicar el comentario: '+error.message); return false; }
+  comentarioEnviadoEn = Date.now();
+  document.getElementById('co-texto').value = '';
+  cargarComentarios(reporteId);
+  return false;
 }
 
 async function pedirCodigoEliminar(id){

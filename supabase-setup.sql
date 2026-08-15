@@ -122,6 +122,55 @@ $$;
 
 grant execute on function public.eliminar_reporte(uuid, text) to anon, authenticated;
 
+-- ========== 6c. FUNCION: marcar como encontrado, PUBLICA (sin codigo) ==========
+-- A diferencia de marcar_resuelto (que exige el codigo secreto del dueño),
+-- esta funcion la puede usar CUALQUIERA que vea el reporte -- pensada para
+-- que la comunidad marque cuando ve que una mascota ya aparecio, aunque no
+-- sea la persona que hizo el reporte original.
+create or replace function public.marcar_encontrado_publico(p_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  filas int;
+begin
+  update public.reportes set estado = 'resuelto' where id = p_id and estado <> 'resuelto';
+  get diagnostics filas = row_count;
+  return filas > 0;
+end;
+$$;
+
+grant execute on function public.marcar_encontrado_publico(uuid) to anon, authenticated;
+
+-- ========== 6d. TABLA DE COMENTARIOS (publicos, tipo redes sociales) ==========
+create table if not exists public.comentarios (
+  id            uuid primary key default gen_random_uuid(),
+  reporte_id    uuid not null references public.reportes(id) on delete cascade,
+  autor_nombre  text not null,
+  texto         text not null,
+  created_at    timestamptz default now()
+);
+
+create index if not exists comentarios_reporte_idx on public.comentarios (reporte_id);
+
+alter table public.comentarios enable row level security;
+
+-- Los comentarios no tienen ningun dato sensible (a diferencia de reportes,
+-- que tiene el codigo_edicion), asi que aqui SI se permite select/insert
+-- directo sobre la tabla, sin necesidad de vista ni funciones intermedias.
+create policy comentarios_select on public.comentarios for select
+  to anon, authenticated using (true);
+
+create policy comentarios_insert on public.comentarios for insert
+  to anon, authenticated with check (
+    char_length(trim(texto)) > 0 and char_length(texto) <= 500
+    and char_length(trim(autor_nombre)) > 0 and char_length(autor_nombre) <= 80
+  );
+
+grant select, insert on public.comentarios to anon, authenticated;
+
 -- ========== 7. STORAGE (fotos) ==========
 insert into storage.buckets (id, name, public)
 values ('fotos', 'fotos', true)
