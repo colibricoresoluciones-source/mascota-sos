@@ -329,10 +329,11 @@ function pintarLista(){
         <div class="card-meta"><i data-lucide="map-pin" style="width:14px;height:14px"></i> ${esc(r.ciudad)}${r.sector?', '+esc(r.sector):''}</div>
         ${r.raza||r.color?`<div class="card-meta">${esc(r.raza||'')}${r.raza&&r.color?' · ':''}${esc(r.color||'')}</div>`:''}
         <p class="card-desc">${esc((r.descripcion||'').slice(0,90))}${(r.descripcion||'').length>90?'...':''}</p>
+        <div class="card-meta" style="font-weight:700;color:#5c4a3a"><i data-lucide="phone" style="width:14px;height:14px"></i> ${esc(r.contacto_telefono)}</div>
         <div class="card-footer">
           <button class="btn btn-secondary btn-sm" onclick="verDetalle('${r.id}')"><i data-lucide="message-circle" style="width:14px;height:14px"></i> Comentarios</button>
           <button class="btn btn-secondary btn-sm" onclick="compartirWhatsApp('${r.id}')" title="Compartir por WhatsApp"><i data-lucide="share-2" style="width:14px;height:14px"></i></button>
-          <a class="btn btn-primary btn-sm" href="tel:${esc(r.contacto_telefono)}"><i data-lucide="phone" style="width:14px;height:14px"></i> Contactar</a>
+          <a class="btn btn-primary btn-sm" href="tel:${esc(r.contacto_telefono)}"><i data-lucide="phone" style="width:14px;height:14px"></i> Llamar</a>
         </div>
         ${r.estado!=='resuelto'?`<button class="btn btn-sm" style="width:100%;margin-top:8px;background:var(--ok);color:#fff" onclick="marcarEncontradoPublico('${r.id}')"><i data-lucide="check-circle" style="width:14px;height:14px"></i> Marcar como encontrado</button>`:''}
       </div>
