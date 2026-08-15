@@ -180,7 +180,10 @@
   </div>
   <div class="field">
     <label>Buscar</label>
-    <input type="text" id="f-texto" placeholder="Nombre, color, raza..." oninput="pintarLista()">
+    <div style="display:flex;gap:8px">
+      <input type="text" id="f-texto" placeholder="Nombre, color, raza..." oninput="pintarLista()" onkeydown="if(event.key==='Enter')pintarLista()" style="flex:1">
+      <button type="button" class="btn btn-primary" onclick="pintarLista()"><i data-lucide="search" style="width:16px;height:16px"></i> Buscar</button>
+    </div>
   </div>
 </div>
 
@@ -290,9 +293,27 @@ async function cargarReportes(){
   if(error){ console.error(error); return; }
   REPORTES = data || [];
   pintarLista();
+  actualizarDatalistCiudades();
   // Si el link trae ?ver=id (ej. compartido por WhatsApp), abre ese reporte directo.
   const verId = new URLSearchParams(location.search).get('ver');
   if(verId && REPORTES.some(r=>r.id===verId)) verDetalle(verId);
+}
+
+// Agrega al datalist las ciudades que ya tienen reportes reales, ademas
+// de las sugerencias fijas de municipios de la region -- asi aparecen
+// primero las que la gente realmente esta usando.
+function actualizarDatalistCiudades(){
+  const datalist = document.getElementById('ciudades-list');
+  const existentes = new Set(Array.from(datalist.options).map(o=>o.value.toLowerCase()));
+  const ciudadesRegistradas = [...new Set(REPORTES.map(r=>(r.ciudad||'').trim()).filter(Boolean))];
+  ciudadesRegistradas.forEach(ciudad=>{
+    if(!existentes.has(ciudad.toLowerCase())){
+      const opt = document.createElement('option');
+      opt.value = ciudad;
+      datalist.insertBefore(opt, datalist.firstChild);
+      existentes.add(ciudad.toLowerCase());
+    }
+  });
 }
 
 function pintarStats(){
