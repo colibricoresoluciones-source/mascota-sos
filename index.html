@@ -135,7 +135,7 @@
   <div class="tabs" id="tabs-tipo">
     <button class="tab active" data-tipo="" onclick="setFiltroTipo('')">Todos</button>
     <button class="tab" data-tipo="perdido" onclick="setFiltroTipo('perdido')">Perdidos</button>
-    <button class="tab" data-tipo="encontrado" onclick="setFiltroTipo('encontrado')">Buscan familia</button>
+    <button class="tab" data-tipo="encontrado" onclick="setFiltroTipo('encontrado')">Buscan su familia</button>
   </div>
   <div class="field">
     <label>Ciudad</label>
@@ -355,7 +355,7 @@ function pintarLista(){
       </div>
       <div class="card-body">
         <div class="card-badges">
-          <span class="badge badge-${r.tipo}">${r.tipo==='perdido'?'Perdido':'Buscan familia'}</span>
+          <span class="badge badge-${r.tipo}">${r.tipo==='perdido'?'Perdido':'Buscan su familia'}</span>
           ${r.estado==='resuelto'?'<span class="badge badge-resuelto">Resuelto</span>':''}
         </div>
         <h3 class="card-title">${esc(r.nombre_mascota) || (r.especie==='perro'?'Perro':r.especie==='gato'?'Gato':'Mascota')}</h3>
@@ -380,7 +380,7 @@ function verDetalle(id){
   document.getElementById('detalle-contenido').innerHTML = `
     ${r.foto_url?`<img src="${esc(r.foto_url)}" style="width:100%;border-radius:12px;margin-bottom:14px;max-height:320px;object-fit:cover">`:''}
     <div class="card-badges" style="margin-bottom:8px">
-      <span class="badge badge-${r.tipo}">${r.tipo==='perdido'?'Perdido':'Buscan familia'}</span>
+      <span class="badge badge-${r.tipo}">${r.tipo==='perdido'?'Perdido':'Buscan su familia'}</span>
       ${r.estado==='resuelto'?'<span class="badge badge-resuelto">Resuelto</span>':''}
     </div>
     <h2 style="margin:0 0 4px">${esc(r.nombre_mascota) || (r.especie==='perro'?'Perro':r.especie==='gato'?'Gato':'Mascota')}</h2>
