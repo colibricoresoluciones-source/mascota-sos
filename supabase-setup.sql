@@ -85,6 +85,38 @@ grant execute on function public.crear_reporte(
   text, text, text, text, text, text, text, text, text, date, text, text, text, text
 ) to anon, authenticated;
 
+-- ========== 5b. FUNCION: editar el propio reporte (requiere el codigo) ==========
+create or replace function public.editar_reporte(
+  p_id uuid, p_codigo text,
+  p_especie text, p_nombre_mascota text, p_raza text, p_color text,
+  p_tamano text, p_descripcion text, p_ciudad text, p_sector text,
+  p_fecha_evento date, p_foto_url text, p_contacto_nombre text,
+  p_contacto_telefono text, p_contacto_email text
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  filas int;
+begin
+  update public.reportes set
+    especie = p_especie, nombre_mascota = p_nombre_mascota, raza = p_raza,
+    color = p_color, tamano = p_tamano, descripcion = p_descripcion,
+    ciudad = p_ciudad, sector = p_sector, fecha_evento = p_fecha_evento,
+    foto_url = p_foto_url, contacto_nombre = p_contacto_nombre,
+    contacto_telefono = p_contacto_telefono, contacto_email = p_contacto_email
+  where id = p_id and codigo_edicion = p_codigo;
+  get diagnostics filas = row_count;
+  return filas > 0;
+end;
+$$;
+
+grant execute on function public.editar_reporte(
+  uuid, text, text, text, text, text, text, text, text, text, date, text, text, text, text
+) to anon, authenticated;
+
 -- ========== 6. FUNCION: marcar como resuelto (requiere el codigo) ==========
 create or replace function public.marcar_resuelto(p_id uuid, p_codigo text)
 returns boolean

@@ -205,6 +205,9 @@
     </div>
     <form id="form-reporte" onsubmit="return guardarReporte(event)">
       <input type="hidden" id="rp-tipo" value="perdido">
+      <input type="hidden" id="rp-edit-id" value="">
+      <input type="hidden" id="rp-edit-codigo" value="">
+      <input type="hidden" id="rp-foto-actual" value="">
       <!-- Campo trampa anti-spam: invisible para personas, los bots suelen llenarlo -->
       <div style="position:absolute;left:-9999px" aria-hidden="true">
         <label>No llenar este campo</label>
@@ -240,7 +243,7 @@
         <div class="field"><label>Tu teléfono</label><input type="tel" id="rp-contacto-telefono" required></div>
       </div>
       <div class="field" style="margin-top:12px"><label>Correo (opcional)</label><input type="email" id="rp-contacto-email"></div>
-      <div style="display:flex;gap:8px;align-items:flex-start;margin-top:16px">
+      <div id="rp-consentimiento-grupo" style="display:flex;gap:8px;align-items:flex-start;margin-top:16px">
         <input type="checkbox" id="rp-consentimiento" required style="margin-top:3px">
         <label for="rp-consentimiento" style="font-weight:400;font-size:12px;color:#7a6350">Entiendo que mi nombre y teléfono se mostrarán públicamente en esta página para que puedan contactarme, conforme a la Ley 1581 de 2012 de protección de datos personales.</label>
       </div>
@@ -394,7 +397,8 @@ function verDetalle(id){
       ${r.contacto_email?`<div style="margin-top:6px;font-size:13px">${esc(r.contacto_email)}</div>`:''}
     </div>
     ${r.estado!=='resuelto'?`<button class="btn btn-primary" style="width:100%;margin-top:16px;background:var(--ok)" onclick="marcarEncontradoPublico('${r.id}')"><i data-lucide="check-circle" style="width:16px;height:16px"></i> Marcar como encontrado / reencontrado</button>`:''}
-    <p style="margin-top:12px;text-align:right">
+    <p style="margin-top:12px;text-align:right;display:flex;gap:14px;justify-content:flex-end;flex-wrap:wrap">
+      <a href="#" onclick="pedirCodigoEditar('${r.id}');return false" style="font-size:12px;color:#a8927e">¿Te equivocaste en algún dato? Editar mi reporte</a>
       <a href="#" onclick="pedirCodigoEliminar('${r.id}');return false" style="font-size:12px;color:#c2483a">Eliminar mi reporte</a>
     </p>
 
@@ -473,6 +477,39 @@ async function pedirCodigoEliminar(id){
   cargarReportes();
 }
 
+function pedirCodigoEditar(id){
+  const codigo = prompt('Escribe el código que te dimos al crear este reporte, para poder editarlo:');
+  if(!codigo) return;
+  const r = REPORTES.find(x=>x.id===id); if(!r) return;
+  closeModal('modal-detalle');
+  // Precarga el formulario con los datos actuales. Si el codigo esta mal,
+  // recien se sabra al intentar guardar (el servidor lo valida).
+  document.getElementById('form-reporte').reset();
+  document.getElementById('rp-edit-id').value = id;
+  document.getElementById('rp-edit-codigo').value = codigo.trim();
+  document.getElementById('rp-foto-actual').value = r.foto_url || '';
+  cambiarTipoForm(r.tipo);
+  document.getElementById('rp-titulo').textContent = 'Editar reporte';
+  document.getElementById('rp-submit').textContent = 'Guardar cambios';
+  document.getElementById('rp-nombre').value = r.nombre_mascota || '';
+  document.getElementById('rp-especie').value = r.especie || 'perro';
+  document.getElementById('rp-raza').value = r.raza || '';
+  document.getElementById('rp-color').value = r.color || '';
+  document.getElementById('rp-tamano').value = r.tamano || 'mediano';
+  document.getElementById('rp-descripcion').value = r.descripcion || '';
+  document.getElementById('rp-ciudad').value = r.ciudad || '';
+  document.getElementById('rp-sector').value = r.sector || '';
+  document.getElementById('rp-fecha').value = r.fecha_evento || '';
+  document.getElementById('rp-contacto-nombre').value = r.contacto_nombre || '';
+  document.getElementById('rp-contacto-telefono').value = r.contacto_telefono || '';
+  document.getElementById('rp-contacto-email').value = r.contacto_email || '';
+  // Ya dio su consentimiento al crear el reporte la primera vez.
+  document.getElementById('rp-consentimiento-grupo').style.display = 'none';
+  document.getElementById('rp-consentimiento').checked = true;
+  formAbiertoEn = Date.now();
+  openModal('modal-reporte');
+}
+
 function compartirWhatsApp(id){
   const r = REPORTES.find(x=>x.id===id); if(!r) return;
   const nombre = r.nombre_mascota || (r.especie==='perro'?'un perro':r.especie==='gato'?'un gato':'una mascota');
@@ -487,6 +524,11 @@ let formAbiertoEn = 0;
 function abrirFormulario(tipo){
   document.getElementById('form-reporte').reset();
   document.getElementById('rp-error').textContent = '';
+  document.getElementById('rp-edit-id').value = '';
+  document.getElementById('rp-edit-codigo').value = '';
+  document.getElementById('rp-foto-actual').value = '';
+  document.getElementById('rp-consentimiento-grupo').style.display = 'flex';
+  document.getElementById('rp-submit').textContent = 'Publicar reporte';
   cambiarTipoForm(tipo);
   formAbiertoEn = Date.now();
   openModal('modal-reporte');
@@ -529,6 +571,10 @@ async function guardarReporte(ev){
   const err = document.getElementById('rp-error');
   const btn = document.getElementById('rp-submit');
   err.textContent = '';
+  const editId = document.getElementById('rp-edit-id').value;
+  const editCodigo = document.getElementById('rp-edit-codigo').value;
+  const esEdicion = !!editId;
+  const textoBotonInicial = esEdicion ? 'Guardar cambios' : 'Publicar reporte';
 
   // --- Anti-spam (sin backend, pero filtra la mayoria de bots automaticos) ---
   // 1) Campo trampa: si un bot lo lleno, se rechaza en silencio.
@@ -541,18 +587,20 @@ async function guardarReporte(ev){
     err.textContent = 'Parece que enviaste el formulario muy rapido. Revisa los datos e intenta de nuevo.';
     return false;
   }
-  // 3) Limite entre reportes desde el mismo navegador (evita envios repetidos).
-  const ultimoEnvio = parseInt(localStorage.getItem('mascotaSOS_ultimoEnvio') || '0', 10);
-  const segundosDesdeUltimo = (Date.now() - ultimoEnvio) / 1000;
-  if(segundosDesdeUltimo < 30){
-    err.textContent = `Espera ${Math.ceil(30 - segundosDesdeUltimo)} segundos antes de publicar otro reporte.`;
-    return false;
+  // 3) Limite entre reportes NUEVOS desde el mismo navegador (no aplica al editar).
+  if(!esEdicion){
+    const ultimoEnvio = parseInt(localStorage.getItem('mascotaSOS_ultimoEnvio') || '0', 10);
+    const segundosDesdeUltimo = (Date.now() - ultimoEnvio) / 1000;
+    if(segundosDesdeUltimo < 30){
+      err.textContent = `Espera ${Math.ceil(30 - segundosDesdeUltimo)} segundos antes de publicar otro reporte.`;
+      return false;
+    }
   }
 
-  btn.disabled = true; btn.textContent = 'Publicando...';
+  btn.disabled = true; btn.textContent = esEdicion ? 'Guardando...' : 'Publicando...';
 
   try{
-    let foto_url = null;
+    let foto_url = document.getElementById('rp-foto-actual').value || null;
     const fotoInput = document.getElementById('rp-foto');
     if(fotoInput.files && fotoInput.files[0]){
       const file = fotoInput.files[0];
@@ -566,8 +614,7 @@ async function guardarReporte(ev){
       foto_url = pub.publicUrl;
     }
 
-    const {data, error} = await sb.rpc('crear_reporte', {
-      p_tipo: document.getElementById('rp-tipo').value,
+    const camposComunes = {
       p_especie: document.getElementById('rp-especie').value,
       p_nombre_mascota: document.getElementById('rp-nombre').value || null,
       p_raza: document.getElementById('rp-raza').value || null,
@@ -581,19 +628,29 @@ async function guardarReporte(ev){
       p_contacto_nombre: document.getElementById('rp-contacto-nombre').value,
       p_contacto_telefono: document.getElementById('rp-contacto-telefono').value,
       p_contacto_email: document.getElementById('rp-contacto-email').value || null
-    });
-    if(error) throw new Error(error.message);
-    const fila = Array.isArray(data) ? data[0] : data;
+    };
 
-    localStorage.setItem('mascotaSOS_ultimoEnvio', String(Date.now()));
-    closeModal('modal-reporte');
-    document.getElementById('codigo-mostrado').textContent = fila.codigo_edicion;
-    openModal('modal-codigo');
-    cargarReportes();
+    if(esEdicion){
+      const {data, error} = await sb.rpc('editar_reporte', {p_id: editId, p_codigo: editCodigo, ...camposComunes});
+      if(error) throw new Error(error.message);
+      if(!data) throw new Error('El código no es correcto. Verifica el código que te dimos al crear el reporte.');
+      closeModal('modal-reporte');
+      alert('¡Reporte actualizado!');
+      cargarReportes();
+    } else {
+      const {data, error} = await sb.rpc('crear_reporte', {p_tipo: document.getElementById('rp-tipo').value, ...camposComunes});
+      if(error) throw new Error(error.message);
+      const fila = Array.isArray(data) ? data[0] : data;
+      localStorage.setItem('mascotaSOS_ultimoEnvio', String(Date.now()));
+      closeModal('modal-reporte');
+      document.getElementById('codigo-mostrado').textContent = fila.codigo_edicion;
+      openModal('modal-codigo');
+      cargarReportes();
+    }
   } catch(e){
     err.textContent = e.message;
   } finally {
-    btn.disabled = false; btn.textContent = 'Publicar reporte';
+    btn.disabled = false; btn.textContent = textoBotonInicial;
   }
   return false;
 }
